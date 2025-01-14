@@ -1000,9 +1000,8 @@ lazy val examples = (projectMatrix in file("examples"))
 
 //TODO this should be invoked by compilation process, see #https://github.com/scalameta/mdoc/issues/355
 val compileDocs: TaskKey[Unit] = taskKey[Unit]("Compiles docs module throwing away its output")
-compileDocs := {
+compileDocs :=
   (docs.jvm(scala3) / mdoc).toTask(" --out target/sttp-docs").value
-}
 
 lazy val docs: ProjectMatrix = (projectMatrix in file("generated-docs")) // important: it must not be docs/
   .enablePlugins(MdocPlugin)

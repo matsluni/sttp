@@ -49,46 +49,42 @@ trait HttpTestExtensions[F[_]] extends AsyncFreeSpecLike with AsyncExecutionCont
   }
 
   "body" - {
-    "post a file" in {
+    "post a file" in
       withTemporaryFile(Some(testBodyBytes)) { f =>
         postEcho.body(f).send(backend).toFuture().map { response =>
           response.body should be(Right(expectedPostEchoResponse))
         }
       }
-    }
   }
 
   "download file" - {
-    "download a binary file using asFile" in {
+    "download a binary file using asFile" in
       withTemporaryNonExistentFile { file =>
         val req = basicRequest.get(uri"$endpoint/download/binary").response(asFile(file))
         req.send(backend).toFuture().flatMap { resp =>
           md5Hash(resp.body.right.get).map(_ shouldBe binaryFileMD5Hash)
         }
       }
-    }
 
-    "download a text file using asFile" in {
+    "download a text file using asFile" in
       withTemporaryNonExistentFile { file =>
         val req = basicRequest.get(uri"$endpoint/download/text").response(asFile(file))
         req.send(backend).toFuture().flatMap { resp =>
           md5Hash(resp.body.right.get).map(_ shouldBe textFileMD5Hash)
         }
       }
-    }
   }
 
   "multipart" - {
     def mp = basicRequest.post(uri"$endpoint/multipart")
 
-    "send a multipart message with a file" in {
+    "send a multipart message with a file" in
       withTemporaryFile(Some(testBodyBytes)) { f =>
         val req = mp.multipartBody(multipartFile("p1", f), multipart("p2", "v2"))
         req.send(backend).toFuture().map { resp =>
           resp.body should be(Right(s"p1=$testBody (${f.name}), p2=v2$defaultFileName"))
         }
       }
-    }
 
     "throw an exception when trying to send a multipart message with an unsupported content type" in {
       val req = basicRequest

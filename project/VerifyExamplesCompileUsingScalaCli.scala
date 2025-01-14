@@ -16,9 +16,7 @@ object VerifyExamplesCompileUsingScalaCli {
         if (result != 0) {
           throw new Exception(s"""Compiling $example failed.\n$errorOutput""".stripMargin)
         }
-      } finally {
-        Process(List("scala-cli", "clean", example.toFile.getAbsolutePath), examplesSrcPath).!
-      }
+      } finally Process(List("scala-cli", "clean", example.toFile.getAbsolutePath), examplesSrcPath).!
     }
   }
 }

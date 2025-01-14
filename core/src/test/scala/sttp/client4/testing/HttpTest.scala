@@ -60,45 +60,40 @@ trait HttpTest[F[_]]
   protected def supportsNonAsciiHeaderValues = true
 
   "request parsing" - {
-    "Inf timeout should not throw exception" in {
+    "Inf timeout should not throw exception" in
       postEcho.readTimeout(Duration.Inf).body(testBody).send(backend).toFuture().map { response =>
         response.body should be(Right(expectedPostEchoResponse))
       }
-    }
   }
 
   "parse response" - {
-    "as string" in {
+    "as string" in
       postEcho.body(testBody).send(backend).toFuture().map { response =>
         response.body should be(Right(expectedPostEchoResponse))
       }
-    }
 
-    "as string with utf-8 characters" in {
+    "as string with utf-8 characters" in
       postEcho.body("this is the body😀").send(backend).toFuture().map { response =>
         response.body should be(Right("POST /echo this is the body😀"))
       }
-    }
 
-    "as string with mapping using map" in {
+    "as string with mapping using map" in
       postEcho
         .body(testBody)
         .response(asString.mapRight((_: String).length))
         .send(backend)
         .toFuture()
         .map(response => response.body should be(Right(expectedPostEchoResponse.length)))
-    }
 
-    "as string with mapping using mapResponse" in {
+    "as string with mapping using mapResponse" in
       postEcho
         .body(testBody)
         .mapResponseRight((_: String).length)
         .send(backend)
         .toFuture()
         .map(response => response.body should be(Right(expectedPostEchoResponse.length)))
-    }
 
-    "as string with mapping using mapWithMetadata" in {
+    "as string with mapping using mapWithMetadata" in
       postEcho
         .body(testBody)
         .response(asStringAlways.mapWithMetadata((b, h) => b + " " + h.contentType.getOrElse("")))
@@ -108,20 +103,17 @@ trait HttpTest[F[_]]
           response.body should include(expectedPostEchoResponse)
           response.body should include("text/plain")
         }
-    }
 
-    "as a byte array" in {
+    "as a byte array" in
       postEcho.body(testBody).response(asByteArray).send(backend).toFuture().map { response =>
         val fc = new String(response.body.right.get, "UTF-8")
         fc should be(expectedPostEchoResponse)
       }
-    }
 
-    "as a byte array exact" in {
+    "as a byte array exact" in
       postEchoExact.body(testBodySignedBytes).response(asByteArrayAlways).send(backend).toFuture().map { response =>
         response.body should be(testBodySignedBytes)
       }
-    }
 
     "as parameters" in {
       val params = List("a" -> "b", "c" -> "d", "e=" -> "&f")
@@ -160,7 +152,7 @@ trait HttpTest[F[_]]
         }
     }
 
-    "as failure, when the request is successful" in {
+    "as failure, when the request is successful" in
       basicRequest
         .post(uri"$endpoint/echo/custom_status/200")
         .body(testBody)
@@ -168,7 +160,6 @@ trait HttpTest[F[_]]
         .send(backend)
         .toFuture()
         .map(_.body shouldBe s"POST /echo/custom_status/200 $testBody")
-    }
 
     "as failure, when the request is not successful" in {
       implicit val monadError: MonadError[F] = backend.monad
@@ -187,16 +178,15 @@ trait HttpTest[F[_]]
         )
     }
 
-    "as string, when the content type encoding is in quotes" in {
+    "as string, when the content type encoding is in quotes" in
       basicRequest
         .post(uri"$endpoint/set_content_type_header_with_encoding_in_quotes")
         .body(testBody)
         .send(backend)
         .toFuture()
         .map(response => response.body should be(Right(testBody)))
-    }
 
-    "as both string and mapped string" in {
+    "as both string and mapped string" in
       postEcho
         .body(testBody)
         .response(asBoth(asStringAlways, asByteArray.mapRight((_: Array[Byte]).length)))
@@ -205,7 +195,6 @@ trait HttpTest[F[_]]
         .map { response =>
           response.body shouldBe ((expectedPostEchoResponse, Right(expectedPostEchoResponse.getBytes.length)))
         }
-    }
 
     "lift errors due to mapping with impure functions into the response monad" in {
       implicit val monadError: MonadError[F] = backend.monad
@@ -226,43 +215,38 @@ trait HttpTest[F[_]]
   }
 
   "parameters" - {
-    "make a get request with parameters" in {
+    "make a get request with parameters" in
       basicRequest
         .get(uri"$endpoint/echo?p2=v2&p1=v1")
         .send(backend)
         .toFuture()
         .map(response => response.body should be(Right("GET /echo p1=v1 p2=v2")))
-    }
   }
 
   "body" - {
-    "post a string" in {
+    "post a string" in
       postEcho.body(testBody).send(backend).toFuture().map { response =>
         response.body should be(Right(expectedPostEchoResponse))
       }
-    }
 
-    "post a byte array" in {
+    "post a byte array" in
       postEcho.body(testBodyBytes).send(backend).toFuture().map { response =>
         response.body should be(Right(expectedPostEchoResponse))
       }
-    }
 
-    "post an input stream" in {
+    "post an input stream" in
       postEcho
         .body(new ByteArrayInputStream(testBodyBytes))
         .send(backend)
         .toFuture()
         .map(response => response.body should be(Right(expectedPostEchoResponse)))
-    }
 
-    "post a byte buffer" in {
+    "post a byte buffer" in
       postEcho
         .body(ByteBuffer.wrap(testBodyBytes))
         .send(backend)
         .toFuture()
         .map(response => response.body should be(Right(expectedPostEchoResponse)))
-    }
 
     "post a byte buffer with a capacity higher than the limit" in {
       val b = ByteBuffer.allocate(100)
@@ -279,35 +263,31 @@ trait HttpTest[F[_]]
         }
     }
 
-    "post a readonly byte buffer" in {
+    "post a readonly byte buffer" in
       postEcho
         .body(ByteBuffer.wrap(testBodyBytes).asReadOnlyBuffer())
         .send(backend)
         .toFuture()
         .map(response => response.body should be(Right(expectedPostEchoResponse)))
-    }
 
-    "post form data" in {
+    "post form data" in
       basicRequest
         .post(uri"$endpoint/echo/form_params/as_string")
         .body("a" -> "b", "c" -> "d")
         .send(backend)
         .toFuture()
         .map(response => response.body should be(Right("a=b c=d")))
-    }
 
-    "post form data with special characters" in {
+    "post form data with special characters" in
       basicRequest
         .post(uri"$endpoint/echo/form_params/as_string")
         .body("a=" -> "/b", "c:" -> "/d")
         .send(backend)
         .toFuture()
         .map(response => response.body should be(Right("a==/b c:=/d")))
-    }
 
-    "post without a body" in {
+    "post without a body" in
       postEcho.send(backend).toFuture().map(response => response.body should be(Right("POST /echo")))
-    }
   }
 
   protected def cacheControlHeaders: Set[String] = Set("no-cache", "max-age=1000")
@@ -315,7 +295,7 @@ trait HttpTest[F[_]]
   "headers" - {
     def getHeaders = basicRequest.get(uri"$endpoint/set_headers")
 
-    "read response headers" in {
+    "read response headers" in
       getHeaders.response(sttpIgnore).send(backend).toFuture().map { response =>
         response.headers should have length (4 + cacheControlHeaders.size).toLong
         response.headers("Cache-Control").toSet should be(cacheControlHeaders)
@@ -323,7 +303,6 @@ trait HttpTest[F[_]]
         response.contentType should be(Some("text/plain; charset=UTF-8"))
         response.contentLength should be(Some(2L))
       }
-    }
 
     // https://github.com/softwaremill/sttp/issues/676
     "include a header once when sent effect is used multiple times" in {
@@ -336,7 +315,7 @@ trait HttpTest[F[_]]
     }
 
     if (supportsHostHeaderOverride) {
-      "should not send the URL's hostname as the host header" in {
+      "should not send the URL's hostname as the host header" in
         basicRequest
           .get(uri"$endpoint/echo/headers")
           .header("Host", "test.com")
@@ -347,7 +326,6 @@ trait HttpTest[F[_]]
             response.body should include("Host->test.com")
             response.body should not include "Host->localhost"
           }
-      }
     }
 
     if (supportsEmptyContentEncoding) {
@@ -362,21 +340,19 @@ trait HttpTest[F[_]]
   }
 
   "errors" - {
-    "return 405 when method not allowed" in {
+    "return 405 when method not allowed" in
       basicRequest.post(uri"$endpoint/set_headers").send(backend).toFuture().map { response =>
         response.code shouldBe StatusCode.MethodNotAllowed
         response.isClientError should be(true)
         response.body.isLeft should be(true)
       }
-    }
 
-    "return 404 when not found" in {
+    "return 404 when not found" in
       basicRequest.get(uri"$endpoint/not/found").send(backend).toFuture().map { response =>
         response.code shouldBe StatusCode.NotFound
         response.isClientError should be(true)
         response.body.isLeft should be(true)
       }
-    }
   }
 
   "auth" - {
@@ -576,46 +552,39 @@ trait HttpTest[F[_]]
     val r4response = "819"
     def loop = basicRequest.post(uri"$endpoint/redirect/loop").response(asStringAlways)
 
-    "not redirect when redirects shouldn't be followed (temporary)" in {
+    "not redirect when redirects shouldn't be followed (temporary)" in
       expectRedirectResponse(r1.followRedirects(false).send(backend), 307)
-    }
 
-    "not redirect when redirects shouldn't be followed (permanent)" in {
+    "not redirect when redirects shouldn't be followed (permanent)" in
       expectRedirectResponse(r2.followRedirects(false).send(backend), 308)
-    }
 
-    "redirect when redirects should be followed" in {
+    "redirect when redirects should be followed" in
       r2.send(backend).toFuture().map { resp =>
         resp.code shouldBe StatusCode.Ok
         resp.body shouldBe r4response
       }
-    }
 
-    "redirect twice when redirects should be followed" in {
+    "redirect twice when redirects should be followed" in
       r1.send(backend).toFuture().map { resp =>
         resp.code shouldBe StatusCode.Ok
         resp.body shouldBe r4response
       }
-    }
 
-    "redirect when redirects should be followed, and the response is parsed" in {
+    "redirect when redirects should be followed, and the response is parsed" in
       r2.response(asString).mapResponseRight((_: String).toInt).send(backend).toFuture().map { resp =>
         resp.code shouldBe StatusCode.Ok
         resp.body shouldBe Right(r4response.toInt)
       }
-    }
 
-    "redirect to a relative url" in {
+    "redirect to a relative url" in
       basicRequest.post(uri"$endpoint/redirect/relative").response(asStringAlways).send(backend).toFuture().map {
         resp =>
           resp.code shouldBe StatusCode.Ok
           resp.body shouldBe r4response
       }
-    }
 
-    "not redirect when maxRedirects is less than or equal to 0" in {
+    "not redirect when maxRedirects is less than or equal to 0" in
       expectRedirectResponse(loop.maxRedirects(-1).send(backend), 302)
-    }
   }
 
   if (supportsRequestTimeout) {
@@ -648,15 +617,13 @@ trait HttpTest[F[_]]
         .body("{}")
         .contentType("application/json")
 
-    "parse an empty error response as empty string" in {
+    "parse an empty error response as empty string" in
       postEmptyResponse.send(backend).toFuture().map(response => response.body should be(Left("")))
-    }
 
-    "in a head request" in {
+    "in a head request" in
       basicRequest.head(emptyAnauthroizedResponseUri).send(backend).toFuture().map { response =>
         response.body should be(Left(""))
       }
-    }
   }
 
   if (supportsSttpExceptions) {

@@ -14,7 +14,7 @@ trait WebSocketConcurrentTest[F[_]] { outer: Suite with AsyncFlatSpecLike with W
   implicit def monad: MonadError[F]
   implicit val convertToFuture: ConvertToFuture[F]
 
-  it should "send & receive messages concurrently" in {
+  it should "send & receive messages concurrently" in
     basicRequest
       .get(uri"$wsEndpoint/ws/echo")
       .response(asWebSocketAlways { (ws: WebSocket[F]) =>
@@ -30,7 +30,6 @@ trait WebSocketConcurrentTest[F[_]] { outer: Suite with AsyncFlatSpecLike with W
       .send(backend)
       .map(_ => succeed)
       .toFuture()
-  }
 
   def concurrently[T](fs: List[() => F[T]]): F[List[T]]
   def sequence[T](fs: List[() => F[T]]): F[List[T]] = fs match {

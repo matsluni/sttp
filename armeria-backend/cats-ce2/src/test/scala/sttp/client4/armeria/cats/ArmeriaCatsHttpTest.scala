@@ -9,11 +9,10 @@ class ArmeriaCatsHttpTest extends HttpTest[IO] with CatsTestBase {
   override val backend: Backend[IO] = ArmeriaCatsBackend[IO]()
 
   "illegal url exceptions" - {
-    "should be wrapped in the effect wrapper" in {
+    "should be wrapped in the effect wrapper" in
       basicRequest.get(uri"ps://sth.com").send(backend).toFuture().failed.map { e =>
         e shouldBe a[IllegalArgumentException]
       }
-    }
   }
 
   override def supportsHostHeaderOverride = false

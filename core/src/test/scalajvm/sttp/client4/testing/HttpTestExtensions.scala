@@ -22,16 +22,15 @@ trait HttpTestExtensions[F[_]] extends AsyncFreeSpecLike { self: HttpTest[F] =>
 
   "parse response" - {
     if (supportsResponseAsInputStream) {
-      "as input stream" in {
+      "as input stream" in
         postEcho.body(testBody).response(asInputStreamAlways(_.readAllBytes())).send(backend).toFuture().map {
           response =>
             val allBytes = response.body
             val fc = new String(allBytes, "UTF-8")
             fc should be(expectedPostEchoResponse)
         }
-      }
 
-      "as input stream unsafe" in {
+      "as input stream unsafe" in
         postEcho.body(testBody).response(asInputStreamAlwaysUnsafe).send(backend).toFuture().map { response =>
           try {
             val allBytes = response.body.readAllBytes()
@@ -39,12 +38,11 @@ trait HttpTestExtensions[F[_]] extends AsyncFreeSpecLike { self: HttpTest[F] =>
             fc should be(expectedPostEchoResponse)
           } finally response.body.close()
         }
-      }
     }
   }
 
   "cookies" - {
-    "read response cookies" in {
+    "read response cookies" in
       basicRequest
         .get(uri"$endpoint/cookies/set")
         .response(sttpIgnore)
@@ -60,9 +58,8 @@ trait HttpTestExtensions[F[_]] extends AsyncFreeSpecLike { self: HttpTest[F] =>
             )
           )
         }
-    }
 
-    "read response cookies with the expires attribute" in {
+    "read response cookies with the expires attribute" in
       basicRequest
         .get(uri"$endpoint/cookies/set_with_expires")
         .response(sttpIgnore)
@@ -83,9 +80,8 @@ trait HttpTestExtensions[F[_]] extends AsyncFreeSpecLike { self: HttpTest[F] =>
             )
           )
         }
-    }
 
-    "received cookies should not be cached and sent back" in {
+    "received cookies should not be cached and sent back" in
       basicRequest
         .get(uri"$endpoint/cookies/set")
         .response(sttpIgnore)
@@ -99,7 +95,6 @@ trait HttpTestExtensions[F[_]] extends AsyncFreeSpecLike { self: HttpTest[F] =>
             .toFuture()
             .map(response => response.body shouldBe "no cookie")
         }
-    }
   }
 
   // browsers do not allow access to redirect responses
@@ -109,16 +104,15 @@ trait HttpTestExtensions[F[_]] extends AsyncFreeSpecLike { self: HttpTest[F] =>
     val r4response = "819"
     def loop = basicRequest.post(uri"$endpoint/redirect/loop")
 
-    "keep a single history entry of redirect responses" in {
+    "keep a single history entry of redirect responses" in
       r3.send(backend).toFuture().map { resp =>
         resp.code shouldBe StatusCode.Ok
         resp.body should be(r4response)
         resp.history should have size 1
         resp.history(0).code shouldBe StatusCode.Found
       }
-    }
 
-    "keep whole history of redirect responses" in {
+    "keep whole history of redirect responses" in
       r1.send(backend).toFuture().map { resp =>
         resp.code shouldBe StatusCode.Ok
         resp.body should be(r4response)
@@ -127,16 +121,14 @@ trait HttpTestExtensions[F[_]] extends AsyncFreeSpecLike { self: HttpTest[F] =>
         resp.history(1).code shouldBe StatusCode.PermanentRedirect
         resp.history(2).code shouldBe StatusCode.Found
       }
-    }
 
-    "break redirect loops" in {
+    "break redirect loops" in
       // sync backends can throw exceptions when evaluating send(), before the toFuture() conversion
       Future(loop.send(backend).toFuture()).flatMap(identity).failed.map {
         case e: SttpClientException.TooManyRedirectsException =>
           e.redirects shouldBe FollowRedirectsBackend.MaxRedirects
         case e => fail(e)
       }
-    }
 
     "break redirect loops after user-specified count" in {
       val maxRedirects = 10
@@ -160,7 +152,7 @@ trait HttpTestExtensions[F[_]] extends AsyncFreeSpecLike { self: HttpTest[F] =>
     )
 
     for ((statusCode, redirectToGet, expectedBody) <- redirectToGetTestData)
-      yield s"for $statusCode redirect, with redirect post to get = $redirectToGet, should return body $expectedBody" in {
+      yield s"for $statusCode redirect, with redirect post to get = $redirectToGet, should return body $expectedBody" in
         basicRequest
           .redirectToGet(redirectToGet)
           .body("x")
@@ -169,7 +161,6 @@ trait HttpTestExtensions[F[_]] extends AsyncFreeSpecLike { self: HttpTest[F] =>
           .send(backend)
           .toFuture()
           .map(resp => resp.body shouldBe expectedBody)
-      }
 
     "strip sensitive headers" - {
       val testData = List(
@@ -178,18 +169,18 @@ trait HttpTestExtensions[F[_]] extends AsyncFreeSpecLike { self: HttpTest[F] =>
         Header(HeaderNames.SetCookie, "A=B")
       )
 
-      for (header <- testData) yield s"for $header redirect" in {
-        basicRequest
-          .get(uri"$endpoint/redirect/strip_sensitive_headers/r1")
-          .header(header)
-          .response(asStringAlways)
-          .send(backend)
-          .toFuture()
-          .map { resp =>
-            println(resp.body)
-            resp.body should not include header.toString
-          }
-      }
+      for (header <- testData)
+        yield s"for $header redirect" in
+          basicRequest
+            .get(uri"$endpoint/redirect/strip_sensitive_headers/r1")
+            .header(header)
+            .response(asStringAlways)
+            .send(backend)
+            .toFuture()
+            .map { resp =>
+              println(resp.body)
+              resp.body should not include header.toString
+            }
     }
   }
 
@@ -283,45 +274,41 @@ trait HttpTestExtensions[F[_]] extends AsyncFreeSpecLike { self: HttpTest[F] =>
     }
 
   "body" - {
-    "post a file" in {
+    "post a file" in
       withTemporaryFile(Some(testBodyBytes)) { f =>
         postEcho.body(f).send(backend).toFuture().map { response =>
           response.body should be(Right(expectedPostEchoResponse))
         }
       }
-    }
   }
 
   "download file" - {
-    "download a binary file using asFile" in {
+    "download a binary file using asFile" in
       withTemporaryNonExistentFile { file =>
         val req = basicRequest.get(uri"$endpoint/download/binary").response(asFile(file))
         req.send(backend).toFuture().flatMap { resp =>
           md5FileHash(resp.body.right.get).map(_ shouldBe binaryFileMD5Hash)
         }
       }
-    }
 
-    "download a binary file using asFile, overwriting its current content" in {
+    "download a binary file using asFile, overwriting its current content" in
       withTemporaryFile(Some(Array(1))) { file =>
         val req = basicRequest.get(uri"$endpoint/download/binary").response(asFile(file))
         req.send(backend).toFuture().flatMap { resp =>
           md5FileHash(resp.body.right.get).map(_ shouldBe binaryFileMD5Hash)
         }
       }
-    }
 
-    "download a text file using asFile" in {
+    "download a text file using asFile" in
       withTemporaryNonExistentFile { file =>
         val req = basicRequest.get(uri"$endpoint/download/text").response(asFile(file))
         req.send(backend).toFuture().flatMap { resp =>
           md5FileHash(resp.body.right.get).map(_ shouldBe textFileMD5Hash)
         }
       }
-    }
 
     if (self.supportsAutoDecompressionDisabling) {
-      "should return compressed data" in {
+      "should return compressed data" in
         withTemporaryNonExistentFile { file =>
           val req = emptyRequest
             .get(uri"$endpoint/raw-gzip-file")
@@ -334,7 +321,6 @@ trait HttpTestExtensions[F[_]] extends AsyncFreeSpecLike { self: HttpTest[F] =>
             }
           }
         }
-      }
     }
   }
 
@@ -342,21 +328,19 @@ trait HttpTestExtensions[F[_]] extends AsyncFreeSpecLike { self: HttpTest[F] =>
     "multipart" - {
       def mp = basicRequest.post(uri"$endpoint/multipart")
 
-      "send a multipart message with a file" in {
+      "send a multipart message with a file" in
         withTemporaryFile(Some(testBodyBytes)) { f =>
           val req = mp.multipartBody(multipartFile("p1", f), multipart("p2", "v2"))
           req.send(backend).toFuture().map { resp =>
             resp.body should be(Right(s"p1=$testBody (${f.getName}), p2=v2$defaultFileName"))
           }
         }
-      }
 
-      "send a multipart message with custom file name" in {
+      "send a multipart message with custom file name" in
         withTemporaryFile(Some(testBodyBytes)) { f =>
           val req = mp.multipartBody(multipartFile("p1", f).fileName("test.txt"))
           req.send(backend).toFuture().map(resp => resp.body should be(Right(s"p1=$testBody (test.txt)")))
         }
-      }
     }
   }
 

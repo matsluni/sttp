@@ -209,7 +209,7 @@ abstract class WebSocketTest[F[_]]
   }
 
   if (supportsReadingWebSocketResponseHeaders) {
-    it should "receive the extra headers set by the server" in {
+    it should "receive the extra headers set by the server" in
       basicRequest
         .get(uri"$wsEndpoint/ws/header")
         .response(asWebSocketAlways((ws: WebSocket[F]) => ws.close()))
@@ -218,7 +218,6 @@ abstract class WebSocketTest[F[_]]
           response.header("Correlation-id") shouldBe Some("ABC-XYZ-123")
         }
         .toFuture()
-    }
   }
 
   def sendText(ws: WebSocket[F], count: Int): F[Unit] =

@@ -39,7 +39,7 @@ abstract class StreamingTest[F[_], S]
 
   protected def supportsStreamingMultipartParts = true
 
-  "stream request body" in {
+  "stream request body" in
     basicRequest
       .post(uri"$endpoint/streaming/echo")
       .streamBody(streams)(stringBodyProducer(Body))
@@ -48,9 +48,8 @@ abstract class StreamingTest[F[_], S]
       .map { response =>
         response.body shouldBe Right(Body)
       }
-  }
 
-  "stream large request body" in {
+  "stream large request body" in
     basicRequest
       .post(uri"$endpoint/streaming/echo")
       .streamBody(streams)(stringBodyProducer(Body))
@@ -59,9 +58,8 @@ abstract class StreamingTest[F[_], S]
       .map { response =>
         response.body shouldBe Right(Body)
       }
-  }
 
-  "stream request body with known length" in {
+  "stream request body with known length" in
     basicRequest
       .post(uri"$endpoint/streaming/is_chunked")
       .streamBody(streams)(stringBodyProducer(Body))
@@ -72,7 +70,6 @@ abstract class StreamingTest[F[_], S]
         // we've explicitly set the length, so the request shouldn't be sent as chunked
         response.body shouldBe Right("false")
       }
-  }
 
   "handle server sent events SSE" in {
     val sseData = "ala ma kota\nzbyszek ma psa"
@@ -91,7 +88,7 @@ abstract class StreamingTest[F[_], S]
       }
   }
 
-  "receive a stream" in {
+  "receive a stream" in
     basicRequest
       .post(uri"$endpoint/streaming/echo")
       .body(Body)
@@ -101,9 +98,8 @@ abstract class StreamingTest[F[_], S]
       .map { response =>
         response.body shouldBe Body
       }
-  }
 
-  "receive a stream and ignore it (without consuming)" in {
+  "receive a stream and ignore it (without consuming)" in
     basicRequest
       .post(uri"$endpoint/streaming/echo")
       .body(Body)
@@ -114,7 +110,6 @@ abstract class StreamingTest[F[_], S]
       .map { response =>
         response.body shouldBe "ignore"
       }
-  }
 
   "receive a stream (unsafe)" in {
     // TODO: for some reason these explicit types are needed in Dotty
@@ -244,7 +239,7 @@ abstract class StreamingTest[F[_], S]
   }
 
   if (supportsStreamingMultipartParts) {
-    "send a stream part in a multipart request" in {
+    "send a stream part in a multipart request" in
       basicRequest
         .post(uri"$endpoint/multipart")
         .response(asStringAlways)
@@ -258,10 +253,9 @@ abstract class StreamingTest[F[_], S]
         .map { response =>
           response.body shouldBe s"p1=v1, p2=v2, p3=v3"
         }
-    }
   }
 
-  "when mapping using asStreamOrFail, receive a stream" in {
+  "when mapping using asStreamOrFail, receive a stream" in
     basicRequest
       .post(uri"$endpoint/streaming/echo")
       .body(Body)
@@ -271,7 +265,6 @@ abstract class StreamingTest[F[_], S]
       .map { response =>
         response.body shouldBe Body
       }
-  }
 
   "when mapping using asStreamOrFail, receive an error" in {
     implicit val monadError: MonadError[F] = backend.monad

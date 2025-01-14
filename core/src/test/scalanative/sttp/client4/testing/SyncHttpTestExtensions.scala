@@ -75,17 +75,16 @@ trait SyncHttpTestExtensions extends AnyFreeSpecLike {
   private def withTemporaryNonExistentFile[T](f: File => T): T = withTemporaryFile(None)(f)
 
   "body" - {
-    "post a file" in {
+    "post a file" in
       withTemporaryFile(Some(testBodyBytes)) { f =>
         val response = postEcho.body(f).send(backend)
         response.body should be(Right(expectedPostEchoResponse))
       }
-    }
   }
 
   "download file" - {
 
-    "download a binary file using asFile" in {
+    "download a binary file using asFile" in
       withTemporaryNonExistentFile { file =>
         val req: Request[Either[String, File]] =
           basicRequest.get(uri"$endpoint/download/binary").response(asFile(file))
@@ -94,9 +93,8 @@ trait SyncHttpTestExtensions extends AnyFreeSpecLike {
         resp.headers should contain only Header.contentLength(body.length())
         body.toPath shouldBe file.toPath
       }
-    }
 
-    "download a text file using asFile" in {
+    "download a text file using asFile" in
       withTemporaryNonExistentFile { file =>
         val req: Request[Either[String, File]] =
           basicRequest.get(uri"$endpoint/download/text").response(asFile(file))
@@ -105,18 +103,16 @@ trait SyncHttpTestExtensions extends AnyFreeSpecLike {
         resp.headers should contain only Header.contentLength(body.length())
         body.toPath shouldBe file.toPath
       }
-    }
   }
 
   "multipart" - {
     def mp = basicRequest.post(uri"$endpoint/multipart")
 
-    "send a multipart message with a file" in {
+    "send a multipart message with a file" in
       withTemporaryFile(Some(testBodyBytes)) { f =>
         val req = mp.multipartBody(multipartFile("p1", f), multipart("p2", "v2"))
         val resp = req.send(backend)
         resp.body should be(Right(s"p1=$testBody (${f.getName}), p2=v2$defaultFileName"))
       }
-    }
   }
 }

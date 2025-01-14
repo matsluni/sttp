@@ -140,9 +140,8 @@ class BackendStubTests extends AnyFlatSpec with Matchers with ScalaFutures {
       .whenRequestMatches(_ => true)
       .thenRespond(throw new TimeoutException())
 
-    a[ReadException] should be thrownBy {
+    a[ReadException] should be thrownBy
       basicRequest.get(uri"http://example.org").send(backend)
-    }
   }
 
   it should "try to convert a basic response to a mapped one" in {

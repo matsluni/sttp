@@ -20,7 +20,7 @@ trait WebSocketBufferOverflowTest[F[_]] { outer: Suite with AsyncFlatSpecLike wi
   implicit val convertToFuture: ConvertToFuture[F]
   def bufferCapacity: Int
 
-  it should "error if incoming messages overflow the buffer" in {
+  it should "error if incoming messages overflow the buffer" in
     basicRequest
       .get(uri"$wsEndpoint/ws/echo")
       .response(asWebSocketAlways { (ws: WebSocket[F]) =>
@@ -36,7 +36,6 @@ trait WebSocketBufferOverflowTest[F[_]] { outer: Suite with AsyncFlatSpecLike wi
         case e if e.getCause.isInstanceOf[ClosedChannelException] => succeed.unit
       }
       .toFuture()
-  }
 
   def eventually[T](interval: FiniteDuration, attempts: Int)(f: => F[T]): F[T]
 }
